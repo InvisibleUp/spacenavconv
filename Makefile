@@ -3,13 +3,13 @@ CFLAGS = -pedantic -Wall -g -I../.. -I/usr/local/include
 LDFLAGS = -L../.. -L/usr/local/lib -lspnav -lX11
 
 .PHONY: all
-all: spacetablet_x11 
+all: spacenavconv_x11 
 
-spacetablet_x11: spacetablet.c
+spacenavconv_x11: spacenavconv.c
 	$(CC) $(CFLAGS) -DBUILD_X11 -o $@ $< $(LDFLAGS)
-spacetablet_af_unix: spacetablet.c
+spacenavconv_af_unix: spacenavconv.c
 	$(CC) $(CFLAGS) -DBUILD_AF_UNIX -o $@ $< $(LDFLAGS)
 
 .PHONY: clean
 clean:
-	rm -f spacetablet_x11 spacetablet_af_unix
+	rm -f spacenavconv_x11 spacenavconv_af_unix
