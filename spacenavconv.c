@@ -1,3 +1,10 @@
+// SpaceNav-Conv v3
+// Copyright (C) InvisibleUp 2016 <invisibleup@outlook.com>
+// A utility for converting the output from a SpaceBall 2003 (or compatible) to something more usable by other programs.
+// Licensed under the BSD 3-Clause license.
+// Based on code from libspacenav from the spacenav project (spacenav.sf.net),
+// Copyright (C) 2007-2009 John Tsiombikas <nuclear@member.fsf.org>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -38,7 +45,7 @@ int main(int argc, char **argv)
 	enum ControllerType TYPE = INVALID;
 	struct ControllerMappings MAPPINGS;
 	struct uinput_user_dev uidev;
-	int MODETOGGLE = 0; //Controller-specific
+	int MODETOGGLE = 0; // Controller-specific
 	int f_uinput;
 	
 	memset(&uidev, 0, sizeof(uidev));
@@ -69,9 +76,8 @@ int main(int argc, char **argv)
 	bpix = BlackPixel(dpy, DefaultScreen(dpy));
 	win = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0, 1, 1, 0, bpix, bpix);
 	
-	/* This actually registers our window with the driver for receiving
-	 * motion/button events through the 3dxsrv-compatible X11 protocol.
-	 */
+	/* This actually registers our window with the driver for receiving *
+	 * motion/button events through the 3dxsrv-compatible X11 protocol. */
 	if(spnav_x11_open(dpy, win) == -1) {
 		fprintf(stderr, "failed to connect to the space navigator daemon\n");
 		return 1;
@@ -90,36 +96,28 @@ int main(int argc, char **argv)
 	uidev.id.bustype = BUS_USB;
 	uidev.id.vendor = 0x0123;
 	uidev.id.product = 0xCDEF;
-	uidev.id.version = 2;
+	uidev.id.version = 3;
 	
 	ioctl(f_uinput, UI_SET_EVBIT, EV_SYN);
 
 	if(argc > 1){
 		int c;
-		while((c = getopt(argc, argv, "mt:vh")) != -1){
+		while((c = getopt(argc, argv, "tv")) != -1){
 			switch(c){
 
 			case 'v':
-				puts("SpaceNav-Conv v2");
-				puts("(c) InvisibleUp 2016");
+				puts("SpaceNav-Conv v3");
+				puts("Copyright (C) InvisibleUp 2016 <invisibleup@outlook.com>");
 				puts("A utility for converting the output from a SpaceBall 2003 (or compatible) to something more usable by other programs.");
-				puts("I think this is BSD licensed?");
+				puts("Licensed under the BSD 3-Clause license.");
+				puts("Based on code from libspacenav from the spacenav project (spacenav.sf.net),");
+				puts("Copyright (C) 2007-2009 John Tsiombikas <nuclear@member.fsf.org>");
 			return EXIT_SUCCESS;
 
-		//	case 'm':
-		//		puts(optarg);
-		//		MULT = atof(optarg);
-		//	break;
-
 			case 't':
-				//Convert to lowercase
 				puts(optarg);
-			//	for(; *optarg; ++optarg){
-			//		*optarg = tolower(*optarg);
-			//	}
-			//	puts(optarg);
 
-				//Init controller
+				// Init controller
 				if(strcmp(optarg, "joystick") == 0){
 					TYPE = JOYSTICK;
 					ioctl(f_uinput, UI_SET_EVBIT, EV_KEY);
@@ -272,8 +270,8 @@ int main(int argc, char **argv)
 				} else if (strcmp(optarg, "tablet") == 0){
 					TYPE = TABLET;
 
-					//Tablet isn't detected by anything unless on whitelist.
-					//Using values for Wacom Intous 5.
+					// Tablet isn't detected by anything unless on whitelist.
+					// Using values from a Wacom Intuos5.
 					snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "Wacom Spaceball 2003");
 					uidev.id.bustype = BUS_USB;
 					uidev.id.vendor = 0x056a;
@@ -284,7 +282,6 @@ int main(int argc, char **argv)
 					ioctl(f_uinput, UI_SET_EVBIT, EV_ABS);
 					ioctl(f_uinput, UI_SET_EVBIT, EV_REL);
 					
-					//ioctl(f_uinput, UI_SET_KEYBIT, BTN_STYLUS); //Ball
 					ioctl(f_uinput, UI_SET_KEYBIT, BTN_TOUCH); //Ball (or Auto)
 					ioctl(f_uinput, UI_SET_KEYBIT, BTN_TOOL_PEN); //1
 					ioctl(f_uinput, UI_SET_KEYBIT, BTN_TOOL_RUBBER); //2
@@ -297,9 +294,9 @@ int main(int argc, char **argv)
 					
 					ioctl(f_uinput, UI_SET_ABSBIT, ABS_X);
 					ioctl(f_uinput, UI_SET_ABSBIT, ABS_Y);
+					ioctl(f_uinput, UI_SET_ABSBIT, ABS_PRESSURE);
 					ioctl(f_uinput, UI_SET_ABSBIT, ABS_TILT_X);
 					ioctl(f_uinput, UI_SET_ABSBIT, ABS_TILT_Y);
-					ioctl(f_uinput, UI_SET_ABSBIT, ABS_PRESSURE);
 					ioctl(f_uinput, UI_SET_ABSBIT, ABS_RZ);
 					
 					MAPPINGS.Axis[0] = ABS_X;
@@ -427,37 +424,24 @@ int main(int argc, char **argv)
 					return EXIT_FAILURE;
 				}
 			break;
-
-			case 'h':
-			case '?':
-			case ':':
-				puts("SpaceNav-Conv v2");
-				puts("Options:");
-				puts("m: Change sensivity multiplier. Default: 1");
-				puts("t: Change controller type. Required.");
-				puts("\tjoystick: Simulates 6 axis joystick w/ all buttons.");
-				puts("\trelative: Creates device with raw relative output.");
-				puts("\ttablet: Simulates a Wacom-like drawing tablet w/ pressure and stroke direction.");
-				puts("\tmouse: Simulates a standard mouse. 7 and 8 are Middle and Right, 1 toggles scrollwheel.");
-				puts("v: Show version and exit.");
-				puts("h: Show this screen and exit.");
-			return EXIT_SUCCESS;
-
-			default:
-				puts("You should not see this.");
-			break;
 			}
 		}
 	} else {
-		puts("You need arguments, son.");
-		return(EXIT_FAILURE);
+		puts("SpaceNav-Conv v3");
+		puts("Options:");
+		puts("t: Change controller type. Required.");
+		puts("\tjoystick: 6 axis joystick with all buttons.");
+		puts("\trelative: 6 axis joystick with raw relative output.");
+		puts("\ttablet: Wacom-like drawing tablet w/ pressure and stroke direction.");
+		puts("\tmouse: Standard 3 button mouse.");
+		puts("v: Show version and exit.");
+		puts("h: Show this screen and exit.");
+		return EXIT_SUCCESS;
 	}
 
 	//Finally write out device info
 	write(f_uinput, &uidev, sizeof(uidev));
 	ioctl(f_uinput, UI_DEV_CREATE);
-
-
 
 	/* spnav_wait_event() and spnav_poll_event(), will silently ignore any non-spnav X11 events.
 	 *
@@ -559,28 +543,28 @@ int main(int argc, char **argv)
 			case 3:
 			case 4:
 			case 5:
-			case 6: //1 - 7
+			case 6: // 1 - 7
 				ev.code = MAPPINGS.Button[sev.button.bnum + 1]; 
 			break;
-			case 7: //ball
+			case 7: // ball
 				ev.code = MAPPINGS.Button[0];
 			break;
-			case 14: //8 (don't ask)
+			case 14: // 8 (???)
 				ev.code = MAPPINGS.Button[8];
 			break;	
-			default: //It's nothing! (This should never happen)
+			default: // It's nothing! (This should never happen)
 				ev.code = -1;
 			break;
 			}
 			
-			//Button is not toggle
+			// Button is not toggle
 			if(ev.code != -1){
 				write(f_uinput, &ev, sizeof(struct input_event));
 			}
 			
 		}
 		
-		//Synchronize
+		// Synchronize
 		{
 			struct input_event ev;
 			memset(&ev, 0, sizeof(struct input_event));
